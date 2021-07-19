@@ -1,0 +1,82 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
+
+android {
+    compileSdkVersion 27
+    buildToolsVersion "27.0.3"
+    defaultConfig {
+        applicationId "com.unusedbrain.ubfilemanager"
+        minSdkVersion 16
+        targetSdkVersion 27
+        versionCode 1
+        versionName '1.0.0'
+        setProperty("archivesBaseName", "file-manager")
+    }
+    signingConfigs {
+        release
+    }
+    buildTypes {
+        debug {
+            applicationIdSuffix ".debug"
+        }
+        release {
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+    }
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+    productFlavors {
+    }
+}
+
+ext {
+    leakCanaryVersion = '1.5.4'
+}
+
+dependencies {
+    implementation "com.android.support:design:27.1.1"
+    implementation "com.android.support:appcompat-v7:27.1.1"
+    implementation 'com.github.bumptech.glide:glide:4.7.1'
+    implementation 'com.booking:rtlviewpager:1.0.1'
+    implementation 'com.andrognito.patternlockview:patternlockview:1.0.0'
+    implementation 'com.bignerdranch.android:recyclerview-multiselect:0.2'
+    implementation 'com.google.code.gson:gson:2.8.2'
+    implementation files('../libs/RootTools.jar')
+    implementation 'com.android.support.constraint:constraint-layout:1.1.2'
+    implementation project(':commons')
+    implementation 'com.github.ajalt.reprint:core:3.2.1@aar'
+    debugImplementation "com.squareup.leakcanary:leakcanary-android:$leakCanaryVersion"
+    releaseImplementation "com.squareup.leakcanary:leakcanary-android-no-op:$leakCanaryVersion"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.7.1'
+}
+
+Properties props = new Properties()
+def propFile = new File('signing.properties')
+if (propFile.canRead()) {
+    props.load(new FileInputStream(propFile))
+
+    if (props != null && props.containsKey('STORE_FILE') && props.containsKey('KEY_ALIAS') && props.containsKey('PASSWORD')) {
+        android.signingConfigs.release.storeFile = file(props['STORE_FILE'])
+        android.signingConfigs.release.storePassword = props['PASSWORD']
+        android.signingConfigs.release.keyAlias = props['KEY_ALIAS']
+        android.signingConfigs.release.keyPassword = props['PASSWORD']
+    } else {
+        println 'signing.properties found but some entries are missing'
+        android.buildTypes.release.signingConfig = null
+    }
+} else {
+    println 'signing.properties not found'
+    android.buildTypes.release.signingConfig = null
+}
+repositories {
+    mavenCentral()
+}
